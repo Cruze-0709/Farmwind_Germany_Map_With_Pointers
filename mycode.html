@@ -16,7 +16,7 @@
   }
 </style>
 <div id="map-container">
-  <!-- Paste your full SVG Germany map markup below from David Liuzzo (as single <svg>...) -->
+  <!-- Paste your SimpleMaps SVG of Germany below (starting and ending with <svg ...>...</svg>) -->
   <svg id="germany-svg" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
     <?xml version="1.0"?>
     
@@ -114,23 +114,24 @@
   const citiesContainer = document.getElementById('cities-container');
   const tooltip = document.getElementById('tooltip');
 
-  // SVG viewBox & geographic bounding box for Germany (tune as fits your SVG’s extents)
+  // If your SVG has a different viewBox, set xMin/xMax/yMin/yMax to match
   const viewBox = { xMin: 0, xMax: 1000, yMin: 0, yMax: 1000 };
+  // Geo bounding box of Germany - MUST fit your SVG. Adjust if your map cropping differs.
   const geoBounds = { lonMin: 5.8, lonMax: 15.1, latMin: 47.3, latMax: 55.1 };
 
-  // Convert lat/lon to SVG x/y using equirectangular mapping
   function project(lat, lon) {
     const xNorm = (lon - geoBounds.lonMin) / (geoBounds.lonMax - geoBounds.lonMin);
     const yNorm = 1 - (lat - geoBounds.latMin) / (geoBounds.latMax - geoBounds.latMin);
     const xSvg = viewBox.xMin + xNorm * (viewBox.xMax - viewBox.xMin);
     const ySvg = viewBox.yMin + yNorm * (viewBox.yMax - viewBox.yMin);
     const svgRect = svg.getBoundingClientRect();
-    const scaleX = svgRect.width / (viewBox.xMax - viewBox.xMin);
-    const scaleY = svgRect.height / (viewBox.yMax - viewBox.yMin);
-    return { x: xSvg * scaleX, y: ySvg * scaleY };
+    return {
+      x: xSvg * svgRect.width / (viewBox.xMax - viewBox.xMin),
+      y: ySvg * svgRect.height / (viewBox.yMax - viewBox.yMin)
+    };
   }
 
-  // Wind turbine SVG icon (green, 36x36 px)
+  // Wind turbine SVG icon (36x36 px, styled green)
   const turbineSvg = `<svg width="36" height="36" viewBox="0 0 554.625 554.625" fill="#1e5631" xmlns="http://www.w3.org/2000/svg">
     <g>
       <polygon points="293.772,554.625 280.222,258.188 265.486,258.188 253.925,554.625"/>
@@ -145,14 +146,13 @@
     </g>
   </svg>`;
 
-  // Wind project data as JS objects (add as needed)
+  // Wind projects data (replace/expand with your own)
   const projects = [
     { name:"Helligbek",lat:54.654573,lon:9.469227,mw:"40.2MW",turbine:"8 × Nordex N133 NH110",year:"2014" },
-    // [...add all your projects from your data table here...]
-    { name:"Wienbergen",lat:52.79747,lon:9.126478,mw:"3.45MW",turbine:"1 × V126 NH149m",year:"2017" }
+    { name:"Dagebüll 1",lat:54.748526,lon:8.757792,mw:"17MW",turbine:"5 × Senvion 3.4M104 NH80",year:"2015" },
+    // ...add the rest
   ];
-
-  // Major cities (for green labels)
+  // Major cities (can expand if desired)
   const cities = [
     { name:"Hamburg",lat:53.5511,lon:9.9937 },
     { name:"Frankfurt am Main",lat:50.1109,lon:8.6821 },
@@ -163,7 +163,6 @@
     { name:"München",lat:48.1351,lon:11.5820 }
   ];
 
-  // Create turbine marker with tooltip
   function createMarker(proj) {
     const div = document.createElement('div');
     div.classList.add('marker');
@@ -176,7 +175,7 @@
       positionTooltip(e);
     });
     div.addEventListener('mousemove', e => { positionTooltip(e); });
-    div.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+    div.addEventListener('mouseleave', () => { tooltip.style.display='none'; });
     return div;
   }
   function positionTooltip(event) {
@@ -188,7 +187,6 @@
     if (top + tooltipRect.height > containerRect.height) top -= tooltipRect.height + 30;
     tooltip.style.left = left + 'px'; tooltip.style.top = top + 'px';
   }
-  // Place markers and city labels
   function populateMap() {
     markersContainer.innerHTML = '';
     projects.forEach(proj => {
@@ -200,12 +198,13 @@
       const pos = project(city.lat, city.lon);
       const label = document.createElement('div');
       label.className = 'city-label';
-      label.style.left = pos.x + 'px'; label.style.top = pos.y + 'px';
+      label.style.left = pos.x + 'px';
+      label.style.top = pos.y + 'px';
       label.textContent = city.name;
       citiesContainer.appendChild(label);
     });
   }
-  window.addEventListener('load', populateMap);
-  window.addEventListener('resize', populateMap);
+  window.addEventListener('load',populateMap);
+  window.addEventListener('resize',populateMap);
 })();
 </script>
